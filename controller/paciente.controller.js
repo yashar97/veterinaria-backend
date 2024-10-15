@@ -2,20 +2,30 @@ import PacienteModel from '../models/Paciente.js'
 
 export const nuevoPaciente = async (req, res) => {
 
-    try {
+    let pacientes = req.body;
 
-        const nuevoPaciente = new PacienteModel(req.body);
-        nuevoPaciente.veterinario = req.veterinario._id;
+    pacientes = pacientes.map(paciente => {
+        paciente.veterinario = req.veterinario._id;
+        return paciente;
+    });
 
-        await nuevoPaciente.save();
-        const pacientes = await PacienteModel.find({ veterinario: req.veterinario._id });
+    pacientes.forEach(async paciente => {
 
-        return res.json(pacientes);
+        if (paciente.id) {
+            const { id, ...resto } = paciente;
 
-    } catch (error) {
-        return res.status(500).json({ mensaje: 'Error interno del servidor' });
-    }
+            try {
 
+                await PacienteModel.create(resto);
+
+                return res.json({});
+
+            } catch (error) {
+                return res.status(500).json({ mensaje: 'Error interno del servidor' });
+            }
+        }
+
+    });
 }
 
 export const eliminarPaciente = async (req, res) => {
